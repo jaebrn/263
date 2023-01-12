@@ -22,9 +22,11 @@ var keycodeW = 87;
 var keycodeS = 83;
 var keycodeUp = 38;
 var keycodeDown = 40;
+//gameOverScreen displays if score is over 10
+var gameOver = false;
 
 function setup() {
-    createCanvas(1500, 1000);
+    createCanvas(1500, 1100);
     background(0);
 
     leftPaddle = new Paddle();
@@ -40,6 +42,17 @@ function setup() {
 
 
 function draw() {
+
+    //game manager
+    if (leftScore >= 10 || rightScore >= 10) {
+        endScreen();
+    } else {
+        game();
+    }
+}
+
+function game() {
+
     background(0);
     leftPaddle.spawn();
     rightPaddle.spawn();
@@ -83,6 +96,26 @@ function draw() {
         rightPaddle.keyDown = false;
         rightPaddle.move();
     }
+
+    // score increases + ball resets if out of bounds
+    if (ball.posX >= width) {
+        leftScore++;
+        ball.posX = width / 2;
+        ball.posY = height / 2;
+    }
+    if (ball.posX <= 0) {
+        RightScore++;
+        ball.posX = width / 2;
+        ball.posY = height / 2;
+    }
+
+    // score
+    fill(50);
+    rect(0, 0, width, 100)
+}
+
+function endScreen() {
+    background(0);
 }
 
 
@@ -115,6 +148,12 @@ class Paddle {
         } else if (this.keyDown) {
             this.posY += this.speed;
         }
+
+        if (this.posY >= height - this.sizeY) {
+            this.posY = height - this.sizeY;
+        } else if (this.posY <= 100) {
+            this.posY = 100;
+        }
     }
 }
 
@@ -123,7 +162,7 @@ class Ball {
         this.fill = 255;
         this.speed = ballSpeed;
         this.posX = width / 2;
-        this.posY = height / 2;
+        this.posY = (height - 100) / 2;
         this.size = 20;
     }
 
