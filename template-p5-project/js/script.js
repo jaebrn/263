@@ -22,8 +22,9 @@ var keycodeW = 87;
 var keycodeS = 83;
 var keycodeUp = 38;
 var keycodeDown = 40;
-//gameOverScreen displays if score is over 10
-var gameOver = false;
+//endScreen displays if score is over 10
+var gameOver = false; // false until score >=10
+var endText; // text displayed on end screen 
 
 function setup() {
     createCanvas(1500, 1100);
@@ -44,7 +45,7 @@ function setup() {
 function draw() {
 
     //game manager
-    if (leftScore >= 10 || rightScore >= 10) {
+    if (gameOver == true) {
         endScreen();
     } else {
         game();
@@ -119,10 +120,33 @@ function game() {
     text("|", width / 2, 50); //divider
     text(rightScore, width / 2 + 100, 50); //right score
 
+    if (leftScore >= 10 || rightScore >= 10) {
+        gameOver = true;
+    }
+
 }
 
 function endScreen() {
     background(0);
+    if (leftScore >= 10) {
+        endText = "Left Player Wins."
+    } else {
+        endText = "Right Player Wins."
+    }
+    fill(255);
+    textSize(80);
+    textAlign(CENTER, CENTER);
+    text("Game Over!", width / 2, 250);
+    text(endText, width / 2, 335);
+    textSize(100);
+    text("Press Enter to Play Again", width / 2, height / 2);
+
+    if (keyIsDown(13)) {
+        leftScore = 0;
+        rightScore = 0;
+        gameOver = false;
+    }
+
 }
 
 
