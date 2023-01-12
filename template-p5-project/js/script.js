@@ -8,7 +8,7 @@ Pong in p5js
 
 "use strict";
 //object speeds
-var paddleSpeed = 0;
+var paddleSpeed = 10;
 var ballSpeed = 10;
 //player scores
 var leftScore = 0;
@@ -40,7 +40,51 @@ function setup() {
 
 
 function draw() {
+    background(0);
+    leftPaddle.spawn();
+    rightPaddle.spawn();
+    ball.spawn();
+
+    // left paddle moves up when 'W' is pressed
+    if (keyIsDown(keycodeW)) {
+        print("W key pressed");
+        leftPaddle.keyUp = true;
+        leftPaddle.move();
+    } else {
+        leftPaddle.keyUp = false;
+        leftPaddle.move();
+    }
+
+    //left paddle moves down when 'S' is pressed
+    if (keyIsDown(keycodeS)) {
+        print('S key pressed');
+        leftPaddle.keyDown = true;
+        leftPaddle.move();
+    } else {
+        leftPaddle.keyDown = false;
+        leftPaddle.move();
+    }
+
+    //right paddle moves up when up arrow is pressed
+    if (keyIsDown(keycodeUp)) {
+        print("Up Arrow pressed");
+        rightPaddle.keyUp = true;
+        rightPaddle.move();
+    } else {
+        rightPaddle.keyUp = false;
+        rightPaddle.move();
+    }
+
+    if (keyIsDown(keycodeDown)) {
+        print("Down Arrow pressed");
+        rightPaddle.keyDown = true;
+        rightPaddle.move();
+    } else {
+        rightPaddle.keyDown = false;
+        rightPaddle.move();
+    }
 }
+
 
 class Paddle {
     constructor() {
@@ -56,7 +100,7 @@ class Paddle {
         this.sizeY = 100;
         //movement bools
         this.keyUp = false;
-        this.keyDown = true;
+        this.keyDown = false;
     }
 
     spawn() {
@@ -66,7 +110,11 @@ class Paddle {
     }
 
     move() {
-
+        if (this.keyUp) {
+            this.posY -= this.speed;
+        } else if (this.keyDown) {
+            this.posY += this.speed;
+        }
     }
 }
 
