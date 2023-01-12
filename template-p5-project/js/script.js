@@ -110,8 +110,15 @@ function game() {
     }
 
     // score
-    fill(50);
-    rect(0, 0, width, 100)
+    fill(30); // grey
+    rect(0, 0, width, 100) // score box
+    textSize(60);
+    textAlign(CENTER, CENTER);
+    fill(255);
+    text(leftScore, width / 2 - 100, 50); //left score
+    text("|", width / 2, 50); //divider
+    text(rightScore, width / 2 + 100, 50); //right score
+
 }
 
 function endScreen() {
