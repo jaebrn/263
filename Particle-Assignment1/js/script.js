@@ -1,5 +1,5 @@
 var phase = 1; // scene manager
-// phase 0 == main sequence, phase 1 == supernova, phase 2 == white dwarf, phase 3 == black hole
+// phase 0 == main sequence, phase 1 == supernova,  phase 3 == black hole
 var totalMass = 0; // total particle mass (determines end state)
 var supernovaCount = 500;
 
@@ -37,10 +37,10 @@ function draw() {
             supernova();
             break;
         case 2:
-            whiteDwarf();
+            blackHole();
             break;
         default:
-            blackHole();
+            mainSequence();
             break;
     }
 }
@@ -108,9 +108,6 @@ function supernova() {
     }
 }
 
-function whiteDwarf() {
-
-}
 
 function blackHole() {
 
