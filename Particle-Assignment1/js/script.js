@@ -1,7 +1,10 @@
-var phase = 1; // scene manager
+var phase = 0; // scene manager
 // phase 0 == main sequence, phase 1 == supernova,  phase 3 == black hole
-var totalMass = 0; // total particle mass (determines end state)
-var supernovaCount = 500;
+
+var totalMass = 0; // total particle mass
+var threshold = 200; // threshold mass (when mass = this, particles undergo crush)
+
+var supernovaCount = 3000; // number of supernova particles
 
 var smallParticles = []; // array containing small particles
 var medParticles = []; // array containing medium particles
@@ -16,7 +19,7 @@ function setup() {
     for (let i = 0; i < 20; i++) { // opens with 100 small particles
         smallParticles[i] = new SmallParticle; // array instantiation
     }
-    for (let i = 0; i < supernovaCount; i++) {
+    for (let i = 0; i < supernovaCount; i++) { // prepares supernova particles without spawning them
         supernovaArray[i] = new Supernova;
         supernovaArray[i].setup();
     }
@@ -28,25 +31,23 @@ function draw() {
     totalMass = smallParticles.length + medParticles.length * 2 + largeParticles.length * 4;
     // small particle mass = 1; medium = 1*2 (2); large = 2*2 (4)
     //print(totalMass);
+    print(phase);
 
     switch (phase) {
-        case 0:
+        case 0: // main sequence: particles float and fuse
             mainSequence();
             break;
-        case 1:
+        case 1: // supernova expanse phase
+            setInterval(switchPhase, 10000);
             supernova();
             break;
-        case 2:
-            blackHole();
-            break;
-        default:
-            mainSequence();
-            break;
+        case 2: // black hole phase
+            supernova();
     }
 }
 
 function mainSequence() {
-    // primary phase of the simulation in which the fusion mass particles collide with each other
+    // initial phase of the simulation in which the fusion mass particles collide with each other
     background(0) //black background
 
     //handling small particles
@@ -93,19 +94,34 @@ function mainSequence() {
         largeParticles[i].move();
     }
 
-    if (keyIsDown(32) && frameCount % 3 == 1) { // allows user to inject additional mass (slowed by framecount condition)
+    if ((keyIsDown(32) || keyIsDown(13) || mouseIsPressed) && frameCount % 3 == 1) { // allows user to inject additional mass (slowed by framecount condition)
         smallParticles.push(new SmallParticle); // adds small particle to array
     }
 
     //print('number of medium particles' + medParticles.length);
+    if (totalMass >= threshold && largeParticles.length > smallParticles.length) {
+        phase++;
+    }
+    print("running main sequence");
 }
 
 function supernova() {
-    background(0);
+
+    if (phase == 2) {
+        background(0, 0, 0, 5);
+
+    }
+    else {
+        background(0);
+    }
     for (let i = 0; i < supernovaCount; i++) {
         supernovaArray[i].display();
         supernovaArray[i].move();
     }
+}
+
+function switchPhase() {
+    phase = 2;
 }
 
 
@@ -120,8 +136,8 @@ class SmallParticle {
             y: random(height)
         }
         this.speed = {
-            x: random(1, 2),
-            y: random(1, 2)
+            x: random(3, 4),
+            y: random(3, 4)
         } // speed 
         this.velocity = {
             x: random(-1, 1),
@@ -142,6 +158,9 @@ class SmallParticle {
         this.pos.x += this.speed.x * this.velocity.x; // handles x movement
         this.pos.y += this.speed.y * this.velocity.y; // handles y movement
 
+        this.pos.x += random(-3, 3); // shake
+        this.pos.y += random(-3, 3); // shake
+
         //particles bounce off of screen bounds
         if (this.pos.x <= 1 || this.pos.x >= width - 1) {
             this.velocity.x *= -1;
@@ -158,8 +177,8 @@ class MedParticle {
             x, y
         }
         this.speed = {
-            x: random(1, 2),
-            y: random(1, 2)
+            x: random(2, 3),
+            y: random(2, 3)
         } // speed 
         this.velocity = {
             x: random(-1, 1),
@@ -178,6 +197,9 @@ class MedParticle {
     move() {
         this.pos.x += this.speed.x * this.velocity.x; // handles x movement
         this.pos.y += this.speed.y * this.velocity.y; // handles y movement
+
+        this.pos.x += random(-2, 2); // shake
+        this.pos.y += random(-2, 2); // shake
 
         //particles bounce off of screen bounds
         if (this.pos.x <= 1 || this.pos.x >= width - 1) {
@@ -217,6 +239,9 @@ class LargeParticle {
         this.pos.x += this.speed.x * this.velocity.x; // handles x movement
         this.pos.y += this.speed.y * this.velocity.y; // handles y movement
 
+        this.pos.x += random(-1, 1); // shake
+        this.pos.y += random(-1, 1); // shake
+
         //particles bounce off of screen bounds
         if (this.pos.x <= 1 || this.pos.x >= width - 1) {
             this.velocity.x *= -1;
@@ -237,17 +262,33 @@ class Supernova {
             x: random(-1, 1),
             y: random(-1, 1)
         }
-        this.size = random(5, 250);
-        this.color = color(random(255), random(255), random(255), random(255));
-        this.speed = 3;
-        this.distanceSeed = random(-50, 150);
+
+        this.invertedVelocity = {
+            x: -this.velocity.x,
+            y: - this.velocity.y
+        }
+        this.size = random(5, 140);
+        this.color = color(random(255), random(255), random(255), random(150));
+        this.speed = 8;
+        this.endPos = random(-100, 100);
+        this.distanceSeed = int(random(5));
+        this.distToCenter;
     }
 
     setup() {
-        if (this.velocity >= 0 && this.velocity < 0.45) {
-            this.velocity = 0.45;
-        } else if (this.velocity < 0 && this.velocity > -0.45) {
-            this.velocity = -0.45;
+
+        switch (this.distanceSeed) { // this staggers the end position to keep it from looking like a clear cut shape
+            case 0:
+                this.endPos = random(100, 300);
+                break;
+            case 1:
+                this.endPos = random(-150, 100);
+                break;
+            case 2:
+                this.endPos = random(100, 200);
+                break;
+            default:
+                break;
         }
     }
 
@@ -258,10 +299,21 @@ class Supernova {
     }
 
     move() {
-        if (dist(this.pos.x, this.pos.y, width / 2, height / 2) <= 500 + this.distanceSeed) {
+        //print(phase);
+        this.distToCenter = dist(this.pos.x, this.pos.y, width / 2, height / 2);
+        if (phase == 1 && this.distToCenter <= 500 + this.endPos) {
             this.pos.x += this.velocity.x * this.speed;
             this.pos.y += this.velocity.y * this.speed;
+        } else if (phase != 1 && this.distToCenter >= 5) {
+            this.pos.x += this.invertedVelocity.x * this.speed;
+            this.pos.y += this.invertedVelocity.y * this.speed;
+            /* if (this.distToCenter <= 100) {
+                this.size *= 1 / this.distToCenter;
+            } */
+
         }
     }
+
+
 
 }
