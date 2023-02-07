@@ -2,7 +2,9 @@ var phase = 0; // scene manager
 // phase 0 == main sequence, phase 1 == supernova,  phase 3 == black hole
 
 var totalMass = 0; // total particle mass
-var threshold = 200; // threshold mass (when mass = this, particles undergo crush)
+var threshold = 20; // threshold mass (when mass = this, particles undergo crush)
+var crush = false;
+var center;
 
 var supernovaCount = 3000; // number of supernova particles
 
@@ -15,7 +17,7 @@ var supernovaArray = []; // array containing supernova particles
 function setup() {
     createCanvas(1800, 1800);
     background(0); // black background
-
+    center = createVector(width / 2, height / 2);
     for (let i = 0; i < 20; i++) { // opens with 100 small particles
         smallParticles[i] = new SmallParticle; // array instantiation
     }
@@ -38,89 +40,114 @@ function draw() {
             mainSequence();
             break;
         case 1: // supernova expanse phase
-            setInterval(switchPhase, 10000);
+            setInterval(phase3, 10000);
             supernova();
             break;
         case 2: // black hole phase
             supernova();
+            break;
     }
 }
 
 function mainSequence() {
-    // initial phase of the simulation in which the fusion mass particles collide with each other
-    background(0) //black background
+    if (crush != true) {
+        // initial phase of the simulation in which the fusion mass particles collide with each other
+        background(0) //black background
+        //handling small particles
+        for (let i = 0; i < smallParticles.length; i++) {
+            smallParticles[i].display();
+            smallParticles[i].move();
+            //small particle collision handling:
+            for (let j = 0; j < smallParticles.length; j++) {
+                var d = dist(smallParticles[j].pos.x, smallParticles[j].pos.y, smallParticles[i].pos.x, smallParticles[i].pos.y)
+                //print(d);
+                if (d <= smallParticles[i].radius * 2 && i != j) {
+                    print('collided');
+                    // background(255, 0, 0);
+                    medParticles.push(new MedParticle(smallParticles[i].pos.x, smallParticles[i].pos.y));
+                    smallParticles.splice(i, 1);
+                    smallParticles.splice(j, 1);
+                    break;
 
-    //handling small particles
-    for (let i = 0; i < smallParticles.length; i++) {
-        smallParticles[i].display();
-        smallParticles[i].move();
-        //small particle collision handling:
-        for (let j = 0; j < smallParticles.length; j++) {
-            var d = dist(smallParticles[j].pos.x, smallParticles[j].pos.y, smallParticles[i].pos.x, smallParticles[i].pos.y)
-            //print(d);
-            if (d <= smallParticles[i].radius * 2 && i != j) {
-                print('collided');
-                // background(255, 0, 0);
-                medParticles.push(new MedParticle(smallParticles[i].pos.x, smallParticles[i].pos.y));
-                smallParticles.splice(i, 1);
-                smallParticles.splice(j, 1);
-                break;
+                }
             }
         }
-    }
 
-    //handling medium particles
-    for (let i = 0; i < medParticles.length; i++) {
-        medParticles[i].display();
-        medParticles[i].move();
-        for (let j = 0; j < medParticles.length; j++) {
-            var d = dist(medParticles[j].pos.x, medParticles[j].pos.y, medParticles[i].pos.x, medParticles[i].pos.y)
-            //print(d);
-            if (d <= medParticles[i].radius * 2 && i != j) {
-                print('collided');
-                // background(255, 0, 0);
+        //handling medium particles
+        for (let i = 0; i < medParticles.length; i++) {
+            medParticles[i].display();
+            medParticles[i].move();
+            for (let j = 0; j < medParticles.length; j++) {
+                var d = dist(medParticles[j].pos.x, medParticles[j].pos.y, medParticles[i].pos.x, medParticles[i].pos.y)
+                //print(d);
+                if (d <= medParticles[i].radius * 2 && i != j) {
+                    print('collided');
+                    // background(255, 0, 0);
 
-                largeParticles.push(new LargeParticle(medParticles[i].pos.x, medParticles[i].pos.y));
-                medParticles.splice(i, 1);
-                medParticles.splice(j, 1);
-                break;
+                    largeParticles.push(new LargeParticle(medParticles[i].pos.x, medParticles[i].pos.y));
+                    medParticles.splice(i, 1);
+                    medParticles.splice(j, 1);
+                    break;
+
+                }
             }
         }
-    }
 
-    //handling large particles
-    for (let i = 0; i < largeParticles.length; i++) {
-        largeParticles[i].display();
-        largeParticles[i].move();
-    }
+        //handling large particles
+        for (let i = 0; i < largeParticles.length; i++) {
+            largeParticles[i].display();
+            largeParticles[i].move();
+        }
 
+        if (totalMass >= threshold && largeParticles.length > smallParticles.length) {
+            crush = true; // triggers phase 1.5
+            // phase 1.5 in which fusion mass particles collect in center
+        }
+
+
+    }
+    if (crush == true) {
+        background(0, 0, 0, 10);
+        setInterval(phase2, 5000);
+        for (let i = 0; i < smallParticles.length; i++) {
+            smallParticles[i].display();
+            smallParticles[i].move();
+        } for (let i = 0; i < medParticles.length; i++) {
+            medParticles[i].display();
+            medParticles[i].move();
+        } for (let i = 0; i < largeParticles.length; i++) {
+            largeParticles[i].display();
+            largeParticles[i].move();
+        }
+    }
     if ((keyIsDown(32) || keyIsDown(13) || mouseIsPressed) && frameCount % 3 == 1) { // allows user to inject additional mass (slowed by framecount condition)
         smallParticles.push(new SmallParticle); // adds small particle to array
     }
-
-    //print('number of medium particles' + medParticles.length);
-    if (totalMass >= threshold && largeParticles.length > smallParticles.length) {
-        phase++;
-    }
-    print("running main sequence");
 }
 
 function supernova() {
 
     if (phase == 2) {
         background(0, 0, 0, 5);
-
     }
     else {
         background(0);
     }
+
     for (let i = 0; i < supernovaCount; i++) {
         supernovaArray[i].display();
         supernovaArray[i].move();
     }
 }
+function phase2() {
+    print('switch to phase 2');
+    if (phase == 0) {
 
-function switchPhase() {
+        phase = 1;
+    }
+}
+function phase3() {
+    print('switch to phase 3');
     phase = 2;
 }
 
@@ -131,10 +158,7 @@ function blackHole() {
 
 class SmallParticle {
     constructor() {
-        this.pos = {
-            x: random(width),
-            y: random(height)
-        }
+        this.pos = createVector(random(width), random(height));
         this.speed = {
             x: random(3, 4),
             y: random(3, 4)
@@ -146,6 +170,7 @@ class SmallParticle {
         this.size = 15; // particle size
         this.radius = 10
         this.color = color(236, 157, 237, 200);
+        this.vectorToCenter = createVector(center - this.pos);
     }
 
     display() {
@@ -155,17 +180,21 @@ class SmallParticle {
     }
 
     move() {
-        this.pos.x += this.speed.x * this.velocity.x; // handles x movement
-        this.pos.y += this.speed.y * this.velocity.y; // handles y movement
+        if (crush != true) {
+            this.pos.x += this.speed.x * this.velocity.x; // handles x movement
+            this.pos.y += this.speed.y * this.velocity.y; // handles y movement
 
-        this.pos.x += random(-3, 3); // shake
-        this.pos.y += random(-3, 3); // shake
+            this.pos.x += random(-3, 3); // shake
+            this.pos.y += random(-3, 3); // shake
 
-        //particles bounce off of screen bounds
-        if (this.pos.x <= 1 || this.pos.x >= width - 1) {
-            this.velocity.x *= -1;
-        } else if (this.pos.y <= 1 || this.pos.y >= height - 1) {
-            this.velocity.y *= -1;
+            //particles bounce off of screen bounds
+            if (this.pos.x <= 1 || this.pos.x >= width - 1) {
+                this.velocity.x *= -1;
+            } else if (this.pos.y <= 1 || this.pos.y >= height - 1) {
+                this.velocity.y *= -1;
+            }
+        } else {
+            p5.Vector.lerp(this.pos, center, 0.01, this.pos);
         }
     }
 
@@ -173,9 +202,7 @@ class SmallParticle {
 
 class MedParticle {
     constructor(x, y) {
-        this.pos = {
-            x, y
-        }
+        this.pos = createVector(x, y);
         this.speed = {
             x: random(2, 3),
             y: random(2, 3)
@@ -195,28 +222,29 @@ class MedParticle {
     }
 
     move() {
-        this.pos.x += this.speed.x * this.velocity.x; // handles x movement
-        this.pos.y += this.speed.y * this.velocity.y; // handles y movement
+        if (crush != true) {
+            this.pos.x += this.speed.x * this.velocity.x; // handles x movement
+            this.pos.y += this.speed.y * this.velocity.y; // handles y movement
 
-        this.pos.x += random(-2, 2); // shake
-        this.pos.y += random(-2, 2); // shake
+            this.pos.x += random(-2, 2); // shake
+            this.pos.y += random(-2, 2); // shake
 
-        //particles bounce off of screen bounds
-        if (this.pos.x <= 1 || this.pos.x >= width - 1) {
-            this.velocity.x *= -1;
-        } else if (this.pos.y <= 1 || this.pos.y >= height - 1) {
-            this.velocity.y *= -1;
+            //particles bounce off of screen bounds
+            if (this.pos.x <= 1 || this.pos.x >= width - 1) {
+                this.velocity.x *= -1;
+            } else if (this.pos.y <= 1 || this.pos.y >= height - 1) {
+                this.velocity.y *= -1;
+            }
+        } else {
+            p5.Vector.lerp(this.pos, center, 0.01, this.pos);
         }
     }
-
 }
 
 class LargeParticle {
 
     constructor(x, y) {
-        this.pos = {
-            x, y
-        }
+        this.pos = createVector(x, y);
         this.speed = {
             x: random(1, 2),
             y: random(1, 2)
@@ -236,17 +264,21 @@ class LargeParticle {
     }
 
     move() {
-        this.pos.x += this.speed.x * this.velocity.x; // handles x movement
-        this.pos.y += this.speed.y * this.velocity.y; // handles y movement
+        if (crush != true) {
+            this.pos.x += this.speed.x * this.velocity.x; // handles x movement
+            this.pos.y += this.speed.y * this.velocity.y; // handles y movement
 
-        this.pos.x += random(-1, 1); // shake
-        this.pos.y += random(-1, 1); // shake
+            this.pos.x += random(-1, 1); // shake
+            this.pos.y += random(-1, 1); // shake
 
-        //particles bounce off of screen bounds
-        if (this.pos.x <= 1 || this.pos.x >= width - 1) {
-            this.velocity.x *= -1;
-        } else if (this.pos.y <= 1 || this.pos.y >= height - 1) {
-            this.velocity.y *= -1;
+            //particles bounce off of screen bounds
+            if (this.pos.x <= 1 || this.pos.x >= width - 1) {
+                this.velocity.x *= -1;
+            } else if (this.pos.y <= 1 || this.pos.y >= height - 1) {
+                this.velocity.y *= -1;
+            }
+        } else {
+            p5.Vector.lerp(this.pos, center, 0.01, this.pos);
         }
     }
 
@@ -299,7 +331,6 @@ class Supernova {
     }
 
     move() {
-        //print(phase);
         this.distToCenter = dist(this.pos.x, this.pos.y, width / 2, height / 2);
         if (phase == 1 && this.distToCenter <= 500 + this.endPos) {
             this.pos.x += this.velocity.x * this.speed;
@@ -307,13 +338,6 @@ class Supernova {
         } else if (phase != 1 && this.distToCenter >= 5) {
             this.pos.x += this.invertedVelocity.x * this.speed;
             this.pos.y += this.invertedVelocity.y * this.speed;
-            /* if (this.distToCenter <= 100) {
-                this.size *= 1 / this.distToCenter;
-            } */
-
         }
     }
-
-
-
 }
