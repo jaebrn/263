@@ -1,4 +1,4 @@
-var phase = 0; // scene manager
+var phase = 1; // scene manager
 // phase 0 == main sequence, phase 1 == supernova,  phase 3 == black hole
 
 var totalMass = 0; // total particle mass
@@ -10,8 +10,13 @@ var smallParticles = []; // array containing small particles
 var medParticles = []; // array containing medium particles
 var largeParticles = [];//array containing large particles
 
+var fusionEnergy = []; // array for the particle system active upon fusion
+var fusionConst = 14; // constant multiplier for length of particle array (length depends on particle type)
+
 var supernovaCount = 3000; // number of supernova particles
 var supernovaArray = []; // array containing supernova particles
+
+var spot; // black hole 
 
 function setup() {
     createCanvas(1800, 1800);
@@ -25,6 +30,8 @@ function setup() {
         supernovaArray[i] = new Supernova;
         supernovaArray[i].setup();
     }
+
+    spot = new BlackHole; // instantiating black hole
 }
 
 function draw() {
@@ -152,9 +159,7 @@ function phase3() {
 
 function blackHole() {
     // black circle center screen 
-    noStroke();
-    fill(0);
-    circle(width / 2, height / 2, 60);
+    spot.display();
 }
 
 class SmallParticle {
@@ -176,6 +181,7 @@ class SmallParticle {
         noStroke();
         fill(this.color);
         ellipse(this.pos.x, this.pos.y, this.radius * 2); // draws particle
+        ellipse(this.pos.x, this.pos.y, this.radius);
     }
 
     move() {
@@ -218,6 +224,7 @@ class MedParticle {
         noStroke();
         fill(this.color);
         ellipse(this.pos.x, this.pos.y, this.radius * 2); // draws particle
+        ellipse(this.pos.x, this.pos.y, this.radius);
     }
 
     move() {
@@ -252,13 +259,16 @@ class LargeParticle {
             y: random(-1, 1)
         };
         this.radius = 40
-        this.color = color(159, 107, 160, 200); // darkest purple
+        this.color = color(159, 107, 160, 150); // darkest purple
     }
 
     display() {
         noStroke();
         fill(this.color);
         ellipse(this.pos.x, this.pos.y, this.radius * 2); // draws particle
+        ellipse(this.pos.x, this.pos.y, this.radius);
+        ellipse(this.pos.x, this.pos.y, this.radius * 1.5);
+        ellipse(this.pos.x, this.pos.y, this.radius * 0.5);
     }
 
     move() {
@@ -325,16 +335,37 @@ class Supernova {
         noStroke();
         fill(this.color);
         circle(this.pos.x, this.pos.y, this.size);
+        circle(this.pos.x, this.pos.y, this.size / 2);
     }
 
     move() { // moving the particle
         this.distToCenter = dist(this.pos.x, this.pos.y, width / 2, height / 2); // assigning and updating dist
-        if (phase == 1 && this.distToCenter <= 500 + this.endPos) { // unless the distance to center meets end pos + 500, move away from center
-            this.pos.x += this.velocity.x * this.speed;
-            this.pos.y += this.velocity.y * this.speed;
-        } else if (phase != 1 && this.distToCenter >= 5) { // if the phase changes, move towards the center 
+        if (phase == 1) {
+            if (this.distToCenter <= 500 + this.endPos) { // unless the distance to center meets end pos + 500, move away from center
+                this.pos.x += this.velocity.x * this.speed;
+                this.pos.y += this.velocity.y * this.speed;
+            } else {
+                this.pos.x += random(-1, 1);
+                this.pos.y += random(-1, 1);
+            }
+        } else if (this.distToCenter >= 5) { // if the phase changes, move towards the center 
             this.pos.x += this.invertedVelocity.x * this.speed;
             this.pos.y += this.invertedVelocity.y * this.speed;
         }
+    }
+}
+
+class BlackHole {
+    constructor() {
+        this.pos = { // starts at center screen
+            x: width / 2,
+            y: height / 2
+        }
+    }
+
+    display() {
+        noStroke();
+        fill(0);
+        circle(this.pos.x, this.pos.y, 60);
     }
 }
