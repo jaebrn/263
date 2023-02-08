@@ -1,4 +1,4 @@
-var phase = 1; // scene manager
+var phase = 0; // scene manager
 // phase 0 == main sequence, phase 1 == supernova,  phase 3 == black hole
 
 var totalMass = 0; // total particle mass
@@ -74,6 +74,7 @@ function mainSequence() {
                 if (d <= smallParticles[i].radius * 2 && i != j) {
                     print('collided');
                     medParticles.push(new MedParticle(smallParticles[i].pos.x, smallParticles[i].pos.y));
+                    fusionEnergy.push(new FusionEnergy(smallParticles[i].pos.x, smallParticles[i].pos.y));
                     smallParticles.splice(i, 1);
                     smallParticles.splice(j, 1);
                     break;
@@ -91,6 +92,7 @@ function mainSequence() {
                 if (d <= medParticles[i].radius * 2 && i != j) {
                     print('collided');
                     largeParticles.push(new LargeParticle(medParticles[i].pos.x, medParticles[i].pos.y));
+                    fusionEnergy.push(new FusionEnergy(medParticles[i].pos.x, medParticles[i].pos.y));
                     medParticles.splice(i, 1);
                     medParticles.splice(j, 1);
                     break;
@@ -127,6 +129,14 @@ function mainSequence() {
 
     if ((keyIsDown(32) || keyIsDown(13) || mouseIsPressed) && frameCount % 3 == 1) { // allows user to inject additional mass (slowed by framecount condition)
         smallParticles.push(new SmallParticle); // adds small particle to array
+    }
+    // handling fusion energy array
+    for (i = 0; i < fusionEnergy.length; i++) {
+        fusionEnergy[i].display();
+        fusionEnergy[i].grow();
+        if (fusionEnergy[i].counter >= 15) {
+            fusionEnergy.splice(i, 1);
+        }
     }
 }
 
@@ -166,8 +176,8 @@ class SmallParticle {
     constructor() {
         this.pos = createVector(random(width), random(height)); //random starting position
         this.speed = { // speed (velocity multiplier)
-            x: random(3, 4),
-            y: random(3, 4)
+            x: random(4, 6),
+            y: random(4, 6)
         }
         this.velocity = { // velocity (direction)
             x: random(-1, 1),
@@ -209,8 +219,8 @@ class MedParticle {
     constructor(x, y) {
         this.pos = createVector(x, y); // position is passed through from colliding smaller particle positions
         this.speed = { // speed (velocity multiplier)
-            x: random(2, 3),
-            y: random(2, 3)
+            x: random(2, 4),
+            y: random(2, 4)
         }
         this.velocity = { // velocity (direction)
             x: random(-1, 1),
@@ -367,5 +377,31 @@ class BlackHole {
         noStroke();
         fill(0);
         circle(this.pos.x, this.pos.y, 60);
+    }
+}
+
+class FusionEnergy {
+    constructor(x, y) {
+        this.pos = {
+            x,
+            y
+        }
+        this.size = 0;
+        this.alpha = 255;
+        this.color = color(255, 255, 255, this.alpha);
+        this.counter = 0;
+    }
+
+    display() {
+        print('spawned');
+        fill(this.color);
+        ellipse(this.pos.x, this.pos.y, this.size)
+    }
+
+    grow() {
+        this.size += 5;
+        this.alpha -= 8;
+        this.counter++;
+        this.color = color(255, 255, 255, this.alpha);
     }
 }
