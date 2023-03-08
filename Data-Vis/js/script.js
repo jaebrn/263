@@ -11,14 +11,11 @@ let skyBright = 50;
 //Stars:
 let starCount = 4000;
 let starArray = [];
-let maxSize = 4;
-let opacity;
+let starOpacity;
 
 
 function preload() {
     weather = loadJSON('https://api.open-meteo.com/v1/forecast?latitude=-33.95&longitude=151.18&hourly=temperature_2m,rain,showers,snowfall,cloudcover,visibility,windspeed_10m,winddirection_10m&daily=sunrise,sunset&current_weather=true&timezone=Australia%2FSydney');
-
-
 }
 
 
@@ -37,7 +34,17 @@ function setup() {
 }
 
 function draw() {
-    time += 0.01;
+    time += 0.1;
+    if (time >= 24) {
+        time = 0
+    }
+    print(time);
+
+    if (time <= 12) {
+        starOpacity = map(time, 0, 12, 360, 0);
+    } else {
+        starOpacity = map(time, 12, 24, 0, 360);
+    }
 
     sky();
     sun();
@@ -62,10 +69,6 @@ function sun() {
     circle(700, 400, 100);
 }
 
-function stars() {
-
-
-}
 
 class Star {
     constructor() {
@@ -74,19 +77,29 @@ class Star {
         this.maxSize = 4;
         this.size;
         this.visibility;
-        this.opacity = 200;
+        this.opacity = starOpacity;
     }
 
     setup() {
-        this.size = random(1, maxSize);
+        this.size = random(1, this.maxSize);
         this.x = random(-width, width * 2);
         this.y = random(-height, height * 2);
     }
 
     display() {
-        this.opacity += random(-50, 50);
+        this.opacity = starOpacity + random(-50, 50);
         fill(200, 45, 360, this.opacity);
         circle(this.x, this.y, this.size);
+    }
+}
+
+class Cloud {
+    constructor() {
+        this.x;
+        this.y;
+        this.w;
+        this.h;
+
     }
 }
 
