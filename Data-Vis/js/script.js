@@ -280,7 +280,7 @@ class Rain {
 
 /*Next steps:
     Sprite for sun/moon (needs to deal with rotation...)
-    Tints on clouds and mountains
+    Tints on clouds and mountains!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     Z-index clouds & adjust speed/size/opacity
     Random events (birds in the sky, rainbow, etc)
     Seasons
