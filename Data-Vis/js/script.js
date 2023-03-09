@@ -15,6 +15,7 @@ let starOpacity;
 
 //Clouds:
 let cloudArray = [];
+let cloudAssets = [17];
 let windSpeed;
 let cloudIndex;
 let cloudCover;
@@ -23,6 +24,30 @@ let cloudCount;
 
 function preload() {
     weather = loadJSON('https://api.open-meteo.com/v1/forecast?latitude=-33.95&longitude=151.18&hourly=temperature_2m,rain,showers,snowfall,cloudcover,visibility,windspeed_10m,winddirection_10m&daily=sunrise,sunset&current_weather=true&timezone=Australia%2FSydney');
+
+    // for (i = 0; i < cloudAssets.length; i++) {
+    //     path = 'assets/Clouds/' + i + '.PNG';
+    //     cloudAssets[i] = loadImage(path);
+    // }
+
+    cloudAssets[0] = loadImage('assets/Clouds/0.PNG');
+    cloudAssets[1] = loadImage('assets/Clouds/1.PNG');
+    cloudAssets[2] = loadImage('assets/Clouds/2.PNG');
+    cloudAssets[3] = loadImage('assets/Clouds/3.PNG');
+    cloudAssets[4] = loadImage('assets/Clouds/4.PNG');
+    cloudAssets[5] = loadImage('assets/Clouds/5.PNG');
+    cloudAssets[6] = loadImage('assets/Clouds/6.PNG');
+    cloudAssets[7] = loadImage('assets/Clouds/7.PNG');
+    cloudAssets[8] = loadImage('assets/Clouds/8.PNG');
+    cloudAssets[9] = loadImage('assets/Clouds/9.PNG');
+    cloudAssets[10] = loadImage('assets/Clouds/10.PNG');
+    cloudAssets[11] = loadImage('assets/Clouds/11.PNG');
+    cloudAssets[12] = loadImage('assets/Clouds/12.PNG');
+    cloudAssets[13] = loadImage('assets/Clouds/13.PNG');
+    cloudAssets[14] = loadImage('assets/Clouds/14.PNG');
+    cloudAssets[15] = loadImage('assets/Clouds/15.PNG');
+    cloudAssets[16] = loadImage('assets/Clouds/16.PNG');
+    cloudAssets[17] = loadImage('assets/Clouds/17.PNG');
 
 }
 
@@ -45,6 +70,7 @@ function setup() {
     windSpeed = weather.current_weather.windspeed;
     print(windSpeed);
     //print(cloudCover);
+
 }
 
 function draw() {
@@ -76,7 +102,6 @@ function draw() {
     print(cloudCount);
     if (cloudCount > cloudArray.length) {
         cloudArray.push(new Cloud);
-        cloudArray[cloudArray.length - 1].spawn();
     }
 
     for (i = 0; i < cloudArray.length; i++) {
@@ -85,6 +110,8 @@ function draw() {
             cloudArray.splice(i, 1);
         }
     }
+
+    image(cloudAssets[5], 500, 500, 500, 500);
 
 }
 
@@ -131,29 +158,24 @@ class Star {
 
 class Cloud {
     constructor() {
-        this.x;
-        this.y;
-        this.w;
-        this.h;
-        this.angle = 15;
-        this.speed = random(windSpeed / 8, windSpeed / 2);
-    }
-
-    spawn() {
         this.x = random(-2500, -400);
         this.y = random(0, 700);
         this.w = random(10, 400);
         this.h = random(100, 200);
-        if (this.h >= this.w) {
-            this.w = this.h + 100;
-        }
+        //this.angle = 15;
+        this.speed = random(windSpeed / 8, windSpeed / 2);
+        this.seed = int(random(0, cloudAssets.length));
+        //this.image = cloudAssets[this.seed]);
+        // if (this.h >= this.w) {
+        //     this.w = this.h + 100;
+        // }
     }
 
     move() {
         this.x += this.speed;
         noStroke();
         fill(0, 0, 360, 100);
-        rect(this.x, this.y, this.w, this.h, this.angle);
+        image(cloudAssets[this.seed], this.x, this.y, 500, 500);
     }
 }
 
