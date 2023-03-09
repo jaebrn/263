@@ -25,11 +25,6 @@ let cloudCount;
 function preload() {
     weather = loadJSON('https://api.open-meteo.com/v1/forecast?latitude=-33.95&longitude=151.18&hourly=temperature_2m,rain,showers,snowfall,cloudcover,visibility,windspeed_10m,winddirection_10m&daily=sunrise,sunset&current_weather=true&timezone=Australia%2FSydney');
 
-    // for (i = 0; i < cloudAssets.length; i++) {
-    //     path = 'assets/Clouds/' + i + '.PNG';
-    //     cloudAssets[i] = loadImage(path);
-    // }
-
     cloudAssets[0] = loadImage('assets/Clouds/0.PNG');
     cloudAssets[1] = loadImage('assets/Clouds/1.PNG');
     cloudAssets[2] = loadImage('assets/Clouds/2.PNG');
@@ -53,6 +48,7 @@ function preload() {
 
 
 function setup() {
+    setAttributes('willReadFrequently', true);
     createCanvas(1920, 1080);
     background(0);
     colorMode(HSB, 360);
@@ -74,9 +70,7 @@ function setup() {
 }
 
 function draw() {
-
-
-    time += 0.1;
+    time += 0.04;
     if (time >= 24) {
         time = 0
     }
@@ -98,8 +92,9 @@ function draw() {
     pop();
     //End rotation
 
-    cloudCount = cloudCover * 2;
-    print(cloudCount);
+    cloudCount = cloudCover;
+    //print(cloudCount);
+
     if (cloudCount > cloudArray.length) {
         cloudArray.push(new Cloud);
     }
@@ -111,15 +106,13 @@ function draw() {
         }
     }
 
-    image(cloudAssets[5], 500, 500, 500, 500);
-
 }
 
 function sky() {
     for (i = 0; i < barCount; i++) {
         noStroke();
         fill(skyHue - i, 200, i * 7 + skyBright);
-        rect(0, i * barHeight, width, barHeight);
+        rect(0, i * barHeight, width, barHeight + 5);
     }
 }
 
@@ -159,23 +152,20 @@ class Star {
 class Cloud {
     constructor() {
         this.x = random(-2500, -400);
-        this.y = random(0, 700);
-        this.w = random(10, 400);
-        this.h = random(100, 200);
-        //this.angle = 15;
+        this.y = random(0, height / 2);
+        this.size = random(350, 550);
         this.speed = random(windSpeed / 8, windSpeed / 2);
         this.seed = int(random(0, cloudAssets.length));
-        //this.image = cloudAssets[this.seed]);
-        // if (this.h >= this.w) {
-        //     this.w = this.h + 100;
-        // }
     }
 
     move() {
         this.x += this.speed;
         noStroke();
-        fill(0, 0, 360, 100);
-        image(cloudAssets[this.seed], this.x, this.y, 500, 500);
+        //tint(360, 200);
+        //blendMode(SCREEN, 0.6);
+        image(cloudAssets[this.seed], this.x, this.y, this.size, this.size);
+        // noTint();
+        //blendMode(NORMAL);
     }
 }
 
