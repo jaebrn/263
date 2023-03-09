@@ -1,5 +1,6 @@
 let weather;
 let time = 0;
+let usingRealTime = false;
 let angle = 235 + 90; // rotation for sun/moon/stars
 
 //Sky:
@@ -16,15 +17,32 @@ let starOpacity;
 //Clouds:
 let cloudArray = [];
 let cloudAssets = [17];
-let windSpeed;
 let cloudIndex;
 let cloudCover;
 let cloudCount;
+
+//Rain:
+let rainArray = [];
+let softAudio;
+let heavyAudio;
+let rainAmt = 300;
+let isRaining = false;
+let thunderAudio;
+
+//Environment   
+let windSpeed;
+let windDir;
+let mountain;
+let ambience;
 
 
 function preload() {
     weather = loadJSON('https://api.open-meteo.com/v1/forecast?latitude=-33.95&longitude=151.18&hourly=temperature_2m,rain,showers,snowfall,cloudcover,visibility,windspeed_10m,winddirection_10m&daily=sunrise,sunset&current_weather=true&timezone=Australia%2FSydney');
 
+    //normally I would use a for loop for this
+    //when using a for loop i get an error that width cannot be read even when provided
+    //I read up on it and this seems to be a known bug
+    //i swear i know how to use loops
     cloudAssets[0] = loadImage('assets/Clouds/0.PNG');
     cloudAssets[1] = loadImage('assets/Clouds/1.PNG');
     cloudAssets[2] = loadImage('assets/Clouds/2.PNG');
@@ -44,10 +62,18 @@ function preload() {
     cloudAssets[16] = loadImage('assets/Clouds/16.PNG');
     cloudAssets[17] = loadImage('assets/Clouds/17.PNG');
 
+    mountain = loadImage('assets/Mountain.PNG');
+
+    softAudio = loadSound('assets/Audio/softrain.mp3');
+    heavyAudio = loadSound('assets/Audio/heavyrain.mp3');
+    thunderAudio = loadSound('assets/Audio/thunder.mp3');
+    ambience = loadSound('assets/Audio/background.mp3');
+
 }
 
 
 function setup() {
+    //Settings
     setAttributes('willReadFrequently', true);
     createCanvas(1920, 1080);
     background(0);
@@ -61,21 +87,43 @@ function setup() {
         starArray[i].setup();
     }
 
+    //Getting values from API
     cloudIndex = weather.hourly.cloudcover.length - 1;
     cloudCover = weather.hourly.cloudcover[cloudIndex];
+    //rainAmt = weather.hourly.rain[cloudIndex] * 5;
+    rainAmt = 0;
     windSpeed = weather.current_weather.windspeed;
-    print(windSpeed);
+    windDir = weather.current_weather.winddirection;
+
+
+    //print(rainAmt);
+    //print(windSpeed);
     //print(cloudCover);
 
 }
 
 function draw() {
-    time += 0.04;
-    if (time >= 24) {
-        time = 0
-    }
-    //print(time);
+    // print('wind dir: ' + windDir);
+    // print('wind speed: ' + windSpeed)
 
+    //Time override (testing)
+    if (usingRealTime) {
+        time = hour();
+    } else {
+        time += 0.04;
+        if (time >= 24) {
+            time = 0
+        }
+    }
+
+
+    if (rainAmt > 0) {
+        isRaining = true;
+    } else {
+        isRaining = false;
+    }
+
+    //star opacity lowered if daytime
     if (time <= 12) {
         starOpacity = map(time, 0, 12, 360, 0);
     } else {
@@ -84,29 +132,74 @@ function draw() {
 
     //Rotating elements:
     push();
-    sky();
-    sun();
-    for (i = 0; i < starCount; i++) {
+    sky(); // draws sky
+    sun(); // draws sun
+    for (i = 0; i < starCount; i++) { // draws stars
         starArray[i].display();
     }
     pop();
     //End rotation
 
-    cloudCount = cloudCover;
+    push();
+    moon();
+    pop();
+
+    cloudCount = cloudCover * 1.5;
     //print(cloudCount);
 
     if (cloudCount > cloudArray.length) {
         cloudArray.push(new Cloud);
     }
 
-    for (i = 0; i < cloudArray.length; i++) {
+    for (i = 0; i < cloudArray.length; i++) { // cloud removed when out of bounds
         cloudArray[i].move();
         if (cloudArray[i].x > width) {
             cloudArray.splice(i, 1);
         }
     }
 
+    //tint(100, 100, 100);
+    image(mountain, 0, 150, width, height); // draws mountains
+    //noTint();
+
+    if (isRaining) {
+        if (rainArray.length < rainAmt) {
+            rainArray.push(new Rain);
+        }
+
+        for (i = 0; i < rainArray.length; i++) {
+            rainArray[i].move();
+            if (rainArray[i].y > height) {
+                rainArray.splice(i, 1);
+            }
+        }
+
+        if (rainAmt <= 200) {
+            if (softAudio.isPlaying()) {
+            } else {
+                softAudio.play();
+            }
+        } else {
+            if (heavyAudio.isPlaying()) {
+            } else {
+                heavyAudio.play();
+            }
+            let rand = int(random(0, 150));
+            //print(rand);
+            if (rand == 0) {
+                thunder();
+            }
+        }
+    } else {
+        if (ambience.isPlaying()) {
+        } else {
+            ambience.play();
+        }
+
+    }
 }
+
+
 
 function sky() {
     for (i = 0; i < barCount; i++) {
@@ -117,14 +210,27 @@ function sky() {
 }
 
 function sun() {
-    fill(360, 0, 360, 250);
+    fill(48, 200, 360, 250);
     translate(width / 2, height / 1.1);
-    rotate(time * 15 + 55);
+    rotate(time * 15 + 55); // rotates with time
     circle(700, 400, 80);
     circle(700, 400, 100);
-
 }
 
+function moon() {
+    fill(0, 0, 260);
+    translate(width / 2, height / 1.2);
+    rotate((time * 4 + 175)); // rotates with time
+    circle(700, 400, 100);
+}
+
+function thunder() {
+    print('thunder');
+    fill(0, 0, 360);
+    rect(0, 0, width, height);
+    thunderAudio.play();
+
+}
 
 class Star {
     constructor() {
@@ -132,8 +238,6 @@ class Star {
         this.y;
         this.maxSize = 4;
         this.size;
-        this.visibility;
-        this.opacity = starOpacity;
     }
 
     setup() {
@@ -144,7 +248,7 @@ class Star {
 
     display() {
         this.opacity = starOpacity + random(-50, 50);
-        fill(200, 45, 360, this.opacity);
+        fill(200, 45, 360, starOpacity);
         circle(this.x, this.y, this.size);
     }
 }
@@ -160,17 +264,37 @@ class Cloud {
 
     move() {
         this.x += this.speed;
-        noStroke();
-        //tint(360, 200);
-        //blendMode(SCREEN, 0.6);
         image(cloudAssets[this.seed], this.x, this.y, this.size, this.size);
-        // noTint();
-        //blendMode(NORMAL);
     }
 }
 
-//Reference
-    // cloudIndex = weather.hourly.cloudcover.length - 1;
-    // cloudCover = weather.hourly.cloudcover[cloudIndex];
-    // text("Current wind speed:" + weather.current_weather.windspeed, 250, 250);
-    // text("Current wind direction:" + weather.current_weather.winddirection, 250, 285);
+class Rain {
+    constructor() {
+        this.x = random(-width, width);
+        this.y = random(-520, 0);
+        this.speed = windSpeed * 2;
+        this.angle = windDir;
+        this.length = windSpeed * random(2, 6);
+        this.x2 = this.x + this.length;
+        this.y2 = this.y + this.length;
+    }
+
+    move() {
+        stroke(0, 0, 360, 200);
+        strokeWeight(5);
+
+        line(this.x, this.y, this.x2, this.y2);
+        this.x += this.speed;
+        this.x2 += this.speed;
+        this.y += this.speed;
+        this.y2 += this.speed;
+    }
+}
+
+
+
+/*Next steps:
+    Sprite for sun/moon (needs to deal with rotation...)
+    Tints on clouds and mountains
+    Z-index clouds & adjust speed/size/opacity
+*/
