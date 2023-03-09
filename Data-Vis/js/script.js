@@ -26,7 +26,6 @@ let rainArray = [];
 let softAudio;
 let heavyAudio;
 let rainAmt = 300;
-let isRaining = false;
 let thunderAudio;
 
 //Environment   
@@ -71,7 +70,6 @@ function preload() {
 
 }
 
-
 function setup() {
     //Settings
     setAttributes('willReadFrequently', true);
@@ -80,8 +78,10 @@ function setup() {
     colorMode(HSB, 360);
     angleMode(DEGREES);
 
+    // sky bg bars
     barHeight = height / barCount;
 
+    //Instantiating stars
     for (i = 0; i < starCount; i++) {
         starArray[i] = new Star;
         starArray[i].setup();
@@ -90,44 +90,32 @@ function setup() {
     //Getting values from API
     cloudIndex = weather.hourly.cloudcover.length - 1;
     cloudCover = weather.hourly.cloudcover[cloudIndex];
-    //rainAmt = weather.hourly.rain[cloudIndex] * 5;
-    rainAmt = 0;
+    rainAmt = weather.hourly.rain[cloudIndex] * 5;
     windSpeed = weather.current_weather.windspeed;
     windDir = weather.current_weather.winddirection;
-
-
-    //print(rainAmt);
-    //print(windSpeed);
-    //print(cloudCover);
-
 }
 
 function draw() {
-    // print('wind dir: ' + windDir);
-    // print('wind speed: ' + windSpeed)
-
-    //Time override (testing)
+    //Time override
     if (usingRealTime) {
         time = hour();
     } else {
-        time += 0.04;
+        time += 0.01;
         if (time >= 24) {
             time = 0
         }
     }
 
-
-    if (rainAmt > 0) {
-        isRaining = true;
-    } else {
-        isRaining = false;
-    }
-
     //star opacity lowered if daytime
+    //sky color/brightness changes with time
     if (time <= 12) {
         starOpacity = map(time, 0, 12, 360, 0);
+        skyHue = map(time, 0, 12, 250, 210);
+        skyBright = map(time, 0, 12, 50, 150);
     } else {
         starOpacity = map(time, 12, 24, 0, 360);
+        skyHue = map(time, 12, 24, 210, 250);
+        skyBright = map(time, 12, 24, 150, 50);
     }
 
     //Rotating elements:
@@ -138,31 +126,30 @@ function draw() {
         starArray[i].display();
     }
     pop();
-    //End rotation
 
     push();
-    moon();
+    moon(); // draws moon (diff rotation)
     pop();
+    //End rotation
 
+    //clouds:
     cloudCount = cloudCover * 1.5;
-    //print(cloudCount);
 
-    if (cloudCount > cloudArray.length) {
+    if (cloudCount > cloudArray.length) { //instantiation
         cloudArray.push(new Cloud);
     }
 
-    for (i = 0; i < cloudArray.length; i++) { // cloud removed when out of bounds
+    for (i = 0; i < cloudArray.length; i++) {
         cloudArray[i].move();
         if (cloudArray[i].x > width) {
-            cloudArray.splice(i, 1);
+            cloudArray.splice(i, 1); // cloud removed when out of bounds
         }
     }
 
-    //tint(100, 100, 100);
     image(mountain, 0, 150, width, height); // draws mountains
-    //noTint();
 
-    if (isRaining) {
+    //Rain:
+    if (rainAmt > 0) {
         if (rainArray.length < rainAmt) {
             rainArray.push(new Rain);
         }
@@ -170,11 +157,11 @@ function draw() {
         for (i = 0; i < rainArray.length; i++) {
             rainArray[i].move();
             if (rainArray[i].y > height) {
-                rainArray.splice(i, 1);
+                rainArray.splice(i, 1); //removed when out of bounds
             }
         }
 
-        if (rainAmt <= 200) {
+        if (rainAmt <= 200) { // different audio depending on amount of rain
             if (softAudio.isPlaying()) {
             } else {
                 softAudio.play();
@@ -187,11 +174,11 @@ function draw() {
             let rand = int(random(0, 150));
             //print(rand);
             if (rand == 0) {
-                thunder();
+                thunder(); // random thunder when raining heavily
             }
         }
     } else {
-        if (ambience.isPlaying()) {
+        if (ambience.isPlaying()) { //background audio
         } else {
             ambience.play();
         }
@@ -199,9 +186,7 @@ function draw() {
     }
 }
 
-
-
-function sky() {
+function sky() { // fills in background bars
     for (i = 0; i < barCount; i++) {
         noStroke();
         fill(skyHue - i, 200, i * 7 + skyBright);
@@ -219,14 +204,14 @@ function sun() {
 
 function moon() {
     fill(0, 0, 260);
-    translate(width / 2, height / 1.2);
-    rotate((time * 4 + 175)); // rotates with time
+    translate(width / 2, height / 1.25);
+    rotate((time * 10 + 105)); // rotates with time
     circle(700, 400, 100);
 }
 
 function thunder() {
     print('thunder');
-    fill(0, 0, 360);
+    fill(0, 0, 360); // screen flashes
     rect(0, 0, width, height);
     thunderAudio.play();
 
@@ -297,4 +282,6 @@ class Rain {
     Sprite for sun/moon (needs to deal with rotation...)
     Tints on clouds and mountains
     Z-index clouds & adjust speed/size/opacity
+    Random events (birds in the sky, rainbow, etc)
+    Seasons
 */
